@@ -13,21 +13,27 @@ const MIN_TEMP = 50;
 const MAX_TEMP = 80;
 const TEMP_POW = 3; # decrease for cooler server, increase for quiter
 
-if (!file_exists('.env')) {
-    throw new Exception('Please, create a .env file with IPMI_IP, IPMI_LOGIN and IPMI_PASS');
-}
+if (
+    !array_key_exists('IPMI_IP', $_ENV)
+    && !array_key_exists('IPMI_LOGIN', $_ENV)
+    && !array_key_exists('IPMI_PASS', $_ENV)
+) {
+    if (!file_exists(__DIR__ . DIRECTORY_SEPARATOR . '.env')) {
+        throw new Exception('Please, create a .env file with IPMI_IP, IPMI_LOGIN and IPMI_PASS');
+    }
 
-$env = parse_ini_file('.env');
+    $_ENV = array_merge($_ENV, parse_ini_file('.env'));
+}
 
 $ipmitool = sprintf(
     'ipmitool -I lanplus -H %s  -U %s -P %s',
-    $env['IPMI_IP'],
-    $env['IPMI_LOGIN'],
-    $env['IPMI_PASS']
+    $_ENV['IPMI_IP'],
+    $_ENV['IPMI_LOGIN'],
+    $_ENV['IPMI_PASS']
 );
 
 while(1) {
-    $temperaturesRaw = explode(PHP_EOL, trim(shell_exec(sprintf('%s sensor reading "Inlet Temp" "Temp" "Exhaust Temp" -c', $ipmitool))));
+    $temperaturesRaw = explode(PHP_EOL, trim(shell_exec(sprintf('%s sensor reading -c "Inlet Temp" "Temp" "Exhaust Temp"', $ipmitool))));
     $temperatures = [];
 
     foreach ($temperaturesRaw as $temperatureRaw) {
@@ -47,11 +53,7 @@ while(1) {
     shell_exec(sprintf('%s raw 0x30 0x30 0x01 0x00', $ipmitool));
     shell_exec(sprintf('%s raw 0x30 0x30 0x02 0xff %s', $ipmitool, $fanLevelHex));
 
-    system('clear');
-    echo sprintf('Temperature system : %d°C%s', $temperatures['Temp'],PHP_EOL);
-    echo sprintf('Temperature in : %d°C%s',$temperatures['Inlet Temp'],PHP_EOL);
-    echo sprintf('Temperature out temperature: %d°C%s', $temperatures['Exhaust Temp'], PHP_EOL);
-    echo sprintf('Fan level to set: %d%%%s', $fanLevel, PHP_EOL);
+    echo sprintf('Fan level: %d%%%s', $fanLevel, PHP_EOL);
 
     sleep(10);
 }
