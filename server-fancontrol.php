@@ -128,8 +128,7 @@ while (true) {
     $x = min(1, max(0, ($temperatures['Temp'] - MIN_TEMP) / (MAX_TEMP - MIN_TEMP)));
     $fanLevel = (int)min(MAX_FAN, max(MIN_FAN, pow($x, TEMP_POW)*(MAX_FAN-MIN_FAN) + MIN_FAN));
 
-    $currentHour = (int)date('H');
-    $currentMinute = (int)date('i');
+    $currentHour = (new DateTime('now', new DateTimeZone('Europe/Paris')))->format('H');
     $isNightTime = $currentHour >= 22 || $currentHour < 8;
 
     if ($isNightTime && $fanLevel > MAX_FAN_AT_NIGHT) {
