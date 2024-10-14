@@ -19,7 +19,7 @@ const MIN_TEMP = 50;
 const MAX_TEMP = 80;
 const TEMP_POW = 3;
 const MAX_FAN_AT_NIGHT = 20;
-const SLEEP_TIME = 5;
+const SLEEP_TIME = 10;
 
 
 function loadEnvVariables(): void
@@ -109,9 +109,9 @@ if (
 $ipmitool = getIpmitoolCommand();
 $client = connectToMqtt();
 
-publishDiscoveryMessages($client);
-
 while (true) {
+    publishDiscoveryMessages($client);
+
     $temperaturesRaw = explode(PHP_EOL, trim(shell_exec(sprintf('%s sensor reading -c "Inlet Temp" "Temp" "Exhaust Temp"', $ipmitool))));
     $temperatures = [];
 
